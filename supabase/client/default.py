@@ -46,7 +46,7 @@ class SupabaseClient:
 
         # Check if the key is a valid JWT
         if not re.match(
-            r"^[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$", supabase_key
+            r"^[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$", key
         ):
             raise ConfigurationError("Invalid API key")
 
