@@ -45,6 +45,9 @@ class ClientOptions:
     flow_type: AuthFlowType = "implicit"
     """flow type to use for authentication"""
 
+    is_async: bool = False
+    """Signals if a client should asynchronous operations"""
+
     def replace(
         self,
         schema: Optional[str] = None,
@@ -60,6 +63,7 @@ class ClientOptions:
             int, float, Timeout
         ] = DEFAULT_STORAGE_CLIENT_TIMEOUT,
         flow_type: Optional[AuthFlowType] = None,
+        is_async: bool = None
     ) -> "ClientOptions":
         """Create a new SupabaseClientOptions with changes"""
         client_options = ClientOptions()
@@ -78,4 +82,5 @@ class ClientOptions:
             storage_client_timeout or self.storage_client_timeout
         )
         client_options.flow_type = flow_type or self.flow_type
+        client_options.is_async = is_async or self.is_async
         return client_options
