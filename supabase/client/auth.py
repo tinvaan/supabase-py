@@ -3,10 +3,13 @@ from gotrue import AsyncGoTrueClient, AsyncMemoryStorage
 from gotrue import SyncGoTrueClient, SyncMemoryStorage
 
 
-class Auth:
+class AuthClient:
     @classmethod
-    def create(cls, *, url, headers, storage_key, auto_refresh_token, persist_session,
-                 storage=AsyncMemoryStorage(), http_client: None, flow_type='implicit', **kwargs):
+    def create(cls, *, url, headers=None, storage_key=None,
+               auto_refresh_token=True, persist_session=True,
+               storage=AsyncMemoryStorage(), http_client=None, flow_type='implicit',
+               **kwargs
+    ):
         args = {
             'url': url,
             'headers': headers or {},
@@ -17,7 +20,7 @@ class Auth:
             'http_client': http_client,
             'flow_type': flow_type
         }
-        if bool(kwargs.get('async', False)):
+        if bool(kwargs.get('is_async', False)):
             # Ensure async memory storage
             args.update({'storage': AsyncMemoryStorage()})
             return AsyncGoTrueClient(**args)
