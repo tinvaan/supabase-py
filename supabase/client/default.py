@@ -1,15 +1,29 @@
 
+import asyncio
 import re
 
 from typing import Any, Dict, Union
-from gotrue import SyncGoTrueClient, SyncMemoryStorage
-from gotrue.types import AuthChangeEvent, Session
+from gotrue import (
+    AsyncGoTrueClient,
+    AsyncMemoryStorage,
+    AuthChangeEvent,
+    Session,
+    SyncGoTrueClient,
+    SyncMemoryStorage
+)
 from httpx import Timeout
-from postgrest import SyncFilterRequestBuilder, SyncPostgrestClient, SyncRequestBuilder
+from postgrest import (
+    AsyncFilterRequestBuilder,
+    AsyncPostgrestClient,
+    AsyncRequestBuilder,
+    SyncFilterRequestBuilder,
+    SyncPostgrestClient,
+    SyncRequestBuilder,
+)
 from postgrest.constants import DEFAULT_POSTGREST_CLIENT_TIMEOUT
-from storage3 import SyncStorageClient
-from storage3 import DEFAULT_TIMEOUT as DEFAULT_STORAGE_TIMEOUT
-from supafunc import SyncFunctionsClient
+from storage3 import (AsyncStorageClient, SyncStorageClient,
+                      DEFAULT_TIMEOUT as DEFAULT_STORAGE_TIMEOUT)
+from supafunc import AsyncFunctionsClient, SyncFunctionsClient
 
 from .auth import AuthClient
 from .exceptions import ConfigurationError
@@ -52,10 +66,9 @@ class SupabaseClient:
 
         self.supabase_url = url
         self.supabase_key = key
-        self._auth_token = {
-            "Authorization": f"Bearer {key}",
-        }
+        self._auth_token = {"Authorization": f"Bearer {key}"}
         options.headers.update(self._get_auth_headers())
+        options.storage = AsyncMemoryStorage() if options.is_async else options.storage
         self.options = options
         self.rest_url = f"{self.supabase_url}/rest/v1"
         self.realtime_url = f"{self.supabase_url}/realtime/v1".replace("http", "ws")
@@ -80,13 +93,7 @@ class SupabaseClient:
         self._functions = None
         self.auth.on_auth_state_change(self._listen_to_auth_events)
 
-    @classmethod
-    def create(cls, url: str, key: str, options: ClientOptions = ClientOptions()):
-        client = cls(url, key, options)
-        client._auth_token = client._get_token_header()
-        return client
-
-    def table(self, table_name: str) -> SyncRequestBuilder:
+    def table(self, table_name: str) -> Union[SyncRequestBuilder, AsyncRequestBuilder]:
         """Perform a table operation.
 
         Note that the supabase client uses the `from` method, but in Python,
@@ -95,14 +102,15 @@ class SupabaseClient:
         """
         return self.from_(table_name)
 
-    def from_(self, table_name: str) -> SyncRequestBuilder:
+    def from_(self, table_name: str) -> Union[SyncRequestBuilder, AsyncRequestBuilder]:
         """Perform a table operation.
 
         See the `table` method.
         """
         return self.postgrest.from_(table_name)
 
-    def rpc(self, fn: str, params: Dict[Any, Any]) -> SyncFilterRequestBuilder:
+    def rpc(self, fn: str, params: Dict[Any, Any]) -> Union[SyncFilterRequestBuilder,
+                                                            AsyncFilterRequestBuilder]:
         """Performs a stored procedure call.
 
         Parameters
@@ -121,7 +129,7 @@ class SupabaseClient:
         return self.postgrest.rpc(fn, params)
 
     @property
-    def postgrest(self):
+    def postgrest(self) -> Union[SyncPostgrestClient, AsyncPostgrestClient]:
         if self._postgrest is None:
             self.options.headers.update(self._auth_token)
             self._postgrest = self._init_postgrest_client(
@@ -129,12 +137,13 @@ class SupabaseClient:
                 headers=self.options.headers,
                 schema=self.options.schema,
                 timeout=self.options.postgrest_client_timeout,
+                options=self.options
             )
 
         return self._postgrest
 
     @property
-    def storage(self):
+    def storage(self) -> Union[SyncStorageClient, AsyncStorageClient]:
         if self._storage is None:
             headers = self._get_auth_headers()
             headers.update(self._auth_token)
@@ -142,15 +151,19 @@ class SupabaseClient:
                 storage_url=self.storage_url,
                 headers=headers,
                 storage_client_timeout=self.options.storage_client_timeout,
+                options=self.options
             )
         return self._storage
 
     @property
-    def functions(self):
+    def functions(self) -> Union[SyncFunctionsClient, AsyncFunctionsClient]:
         if self._functions is None:
             headers = self._get_auth_headers()
             headers.update(self._auth_token)
-            self._functions = SyncFunctionsClient(self.functions_url, headers)
+            self._functions = (
+                AsyncFunctionsClient(self.functions_url, headers) if self.options.is_async else
+                SyncFunctionsClient(self.functions_url, headers)
+            )
         return self._functions
 
     #     async def remove_subscription_helper(resolve):
@@ -193,11 +206,16 @@ class SupabaseClient:
         storage_url: str,
         headers: Dict[str, str],
         storage_client_timeout: int = DEFAULT_STORAGE_TIMEOUT,
-    ) -> SyncStorageClient:
-        return SyncStorageClient(storage_url, headers, storage_client_timeout)
+        options: ClientOptions = ClientOptions()
+    ) -> Union[SyncStorageClient, AsyncStorageClient]:
+        client = AsyncStorageClient if options.is_async else SyncStorageClient
+        return client(storage_url, headers, storage_client_timeout)
 
     @staticmethod
-    def _init_supabase_auth_client(auth_url: str, client_options: ClientOptions) -> SyncGoTrueClient:
+    def _init_supabase_auth_client(
+        auth_url: str,
+        client_options: ClientOptions
+    ) -> Union[SyncGoTrueClient, AsyncGoTrueClient]:
         return AuthClient.create(
             url=auth_url,
             auto_refresh_token=client_options.auto_refresh_token,
@@ -205,7 +223,7 @@ class SupabaseClient:
             storage=client_options.storage,
             headers=client_options.headers,
             flow_type=client_options.flow_type,
-            is_async=False
+            is_async=client_options.is_async
         )
 
     @staticmethod
@@ -214,9 +232,11 @@ class SupabaseClient:
         headers: Dict[str, str],
         schema: str,
         timeout: Union[int, float, Timeout] = DEFAULT_POSTGREST_CLIENT_TIMEOUT,
-    ) -> SyncPostgrestClient:
+        options: ClientOptions = ClientOptions()
+    ) -> Union[SyncPostgrestClient, AsyncPostgrestClient]:
         """Private helper for creating an instance of the Postgrest client."""
-        return SyncPostgrestClient(rest_url, headers=headers, schema=schema, timeout=timeout)
+        client = AsyncPostgrestClient if options.is_async else SyncPostgrestClient
+        return client(rest_url, headers=headers, schema=schema, timeout=timeout)
 
     def _create_auth_header(self, token: str):
         return {"Authorization": f"Bearer {token}"}
@@ -228,15 +248,6 @@ class SupabaseClient:
             "Authorization": f"Bearer {self.supabase_key}",
         }
 
-    def _get_token_header(self):
-        try:
-            session = self.auth.get_session()
-            access_token = session.access_token
-        except Exception:
-            access_token = self.supabase_key
-
-        return self._create_auth_header(access_token)
-
     def _listen_to_auth_events(self, event: AuthChangeEvent, session: Union[Session, None]):
         access_token = self.supabase_key
         if event in ["SIGNED_IN", "TOKEN_REFRESHED", "SIGNED_OUT"]:
@@ -247,6 +258,38 @@ class SupabaseClient:
             access_token = session.access_token if session else self.supabase_key
 
         self._auth_token = self._create_auth_header(access_token)
+
+
+class SyncClient(SupabaseClient):
+    @classmethod
+    def create(cls, url: str, key: str, options: ClientOptions = ClientOptions()):
+        client = cls(url, key, options)
+        client._auth_token = client._get_token_header()
+        return client
+
+    def _get_token_header(self):
+        try:
+            session = self.auth.get_session()
+            access_token = session.access_token
+        except Exception:
+            access_token = self.supabase_key
+        return self._create_auth_header(access_token)
+
+
+class AsyncClient(SupabaseClient):
+    @classmethod
+    async def create(cls, url: str, key: str, options: ClientOptions=ClientOptions()):
+        client = cls(url, key, options)
+        client._auth_token = await client._get_token_header()
+        return client
+
+    async def _get_token_header(self):
+        try:
+            session = await self.auth.get_session()
+            access_token = session.access_token
+        except Exception:
+            access_token = self.supabase_key
+        return self._create_auth_header(access_token)
 
 
 def create_client(supabase_url: str, supabase_key: str,
@@ -278,4 +321,6 @@ def create_client(supabase_url: str, supabase_key: str,
     -------
     Client
     """
-    return SupabaseClient.create(url=supabase_url, key=supabase_key, options=options)
+    if options.is_async:
+        return asyncio.run(AsyncClient.create(supabase_url, supabase_key, options))
+    return SyncClient.create(supabase_url, supabase_key, options)
