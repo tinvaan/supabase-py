@@ -63,7 +63,7 @@ class ClientOptions:
             int, float, Timeout
         ] = DEFAULT_STORAGE_CLIENT_TIMEOUT,
         flow_type: Optional[AuthFlowType] = None,
-        is_async: bool = None
+        is_async: bool = None,
     ) -> "ClientOptions":
         """Create a new SupabaseClientOptions with changes"""
         client_options = ClientOptions()
