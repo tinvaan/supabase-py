@@ -1,6 +1,6 @@
 import asyncio
 import re
-from typing import Any, Dict, Union
+from typing import Any, Coroutine, Dict, Union
 
 from gotrue import (
     AsyncGoTrueClient,
@@ -94,6 +94,12 @@ class SupabaseClient:
         self._storage = None
         self._functions = None
         self.auth.on_auth_state_change(self._listen_to_auth_events)
+
+    @classmethod
+    def create(cls, url: str, key: str, options: ClientOptions = ClientOptions()):
+        client = cls(url, key, options)
+        client._auth_token = client._get_token_header()
+        return client
 
     def table(self, table_name: str) -> Union[SyncRequestBuilder, AsyncRequestBuilder]:
         """Perform a table operation.
@@ -251,6 +257,16 @@ class SupabaseClient:
             "Authorization": f"Bearer {self.supabase_key}",
         }
 
+    def _get_token_header(self):
+        try:
+            session = self.auth.get_session()
+            if self.options.is_async and isinstance(session, Coroutine):
+                session = asyncio.run(session)
+            access_token = session.access_token
+        except Exception:
+            access_token = self.supabase_key
+        return self._create_auth_header(access_token)
+
     def _listen_to_auth_events(
         self, event: AuthChangeEvent, session: Union[Session, None]
     ):
@@ -263,38 +279,6 @@ class SupabaseClient:
             access_token = session.access_token if session else self.supabase_key
 
         self._auth_token = self._create_auth_header(access_token)
-
-
-class SyncClient(SupabaseClient):
-    @classmethod
-    def create(cls, url: str, key: str, options: ClientOptions = ClientOptions()):
-        client = cls(url, key, options)
-        client._auth_token = client._get_token_header()
-        return client
-
-    def _get_token_header(self):
-        try:
-            session = self.auth.get_session()
-            access_token = session.access_token
-        except Exception:
-            access_token = self.supabase_key
-        return self._create_auth_header(access_token)
-
-
-class AsyncClient(SupabaseClient):
-    @classmethod
-    async def create(cls, url: str, key: str, options: ClientOptions = ClientOptions()):
-        client = cls(url, key, options)
-        client._auth_token = await client._get_token_header()
-        return client
-
-    async def _get_token_header(self):
-        try:
-            session = await self.auth.get_session()
-            access_token = session.access_token
-        except Exception:
-            access_token = self.supabase_key
-        return self._create_auth_header(access_token)
 
 
 def create_client(
@@ -328,6 +312,4 @@ def create_client(
     -------
     Client
     """
-    if options.is_async:
-        return asyncio.run(AsyncClient.create(supabase_url, supabase_key, options))
-    return SyncClient.create(supabase_url, supabase_key, options)
+    return SupabaseClient.create(supabase_url, supabase_key, options)
