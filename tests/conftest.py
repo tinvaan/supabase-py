@@ -5,7 +5,7 @@ import os
 import pytest
 from dotenv import load_dotenv
 
-from supabase import Client, create_client
+from supabase import SupabaseClient, create_client
 
 
 def pytest_configure(config) -> None:
@@ -13,7 +13,7 @@ def pytest_configure(config) -> None:
 
 
 @pytest.fixture(scope="session")
-def supabase() -> Client:
+def supabase() -> SupabaseClient:
     url = os.environ.get("SUPABASE_TEST_URL")
     assert url is not None, "Must provide SUPABASE_TEST_URL environment variable"
     key = os.environ.get("SUPABASE_TEST_KEY")

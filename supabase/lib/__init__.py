@@ -1,4 +1,5 @@
-from supabase._async import auth_client
+
+from supabase.client.auth import AuthClient
 from supabase.lib import realtime_client
 
-__all__ = ["auth_client", "realtime_client"]
+__all__ = ["AuthClient", "realtime_client"]
