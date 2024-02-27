@@ -1,5 +1,5 @@
-
 import unittest
+
 from gotrue import SyncMemoryStorage
 
 from supabase.lib.client_options import ClientOptions
@@ -15,8 +15,8 @@ class TestClientOptions(unittest.TestCase):
             auto_refresh_token=False,
             persist_session=False,
             storage=self.storage,
-            realtime={"key": "value"
-        })
+            realtime={"key": "value"},
+        )
 
     def test_replace_returns_updated_options(self) -> None:
         self.assertEqual(
@@ -28,7 +28,7 @@ class TestClientOptions(unittest.TestCase):
                 persist_session=False,
                 storage=self.storage,
                 realtime={"key": "value"},
-            )
+            ),
         )
 
     def test_replace_updates_only_new_options(self):

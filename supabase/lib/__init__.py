@@ -1,4 +1,3 @@
-
 from supabase.client.auth import AuthClient
 from supabase.lib import realtime_client
 

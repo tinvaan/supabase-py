@@ -1,4 +1,3 @@
-
 import unittest
 
 from supabase import SupabaseClient
@@ -12,7 +11,9 @@ class TestFunctionsClient(unittest.TestCase):
         self.client = SupabaseClient(self.url, self.key)
 
     def test_functions_client_initialization(self):
-        assert self.client.functions_url == f"https://{self.ref}.supabase.co/functions/v1"
+        assert (
+            self.client.functions_url == f"https://{self.ref}.supabase.co/functions/v1"
+        )
 
         url = "https://localhost:54322"
         client = SupabaseClient(url, self.key)
