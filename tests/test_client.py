@@ -1,8 +1,7 @@
-
 import os
 import unittest
 
-from supabase import create_client, SupabaseClient
+from supabase import SupabaseClient, create_client
 from supabase.client.exceptions import ConfigurationError
 
 
