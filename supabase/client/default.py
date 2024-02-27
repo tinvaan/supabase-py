@@ -51,9 +51,9 @@ class SupabaseClient:
             `DEFAULT_OPTIONS` dict.
         """
 
-        if not url:
+        if not (url and isinstance(url, str)):
             raise ConfigurationError("supabase_url is required")
-        if not key:
+        if not (key and isinstance(key, str)):
             raise ConfigurationError("supabase_key is required")
 
         # Check if the url and key are valid
