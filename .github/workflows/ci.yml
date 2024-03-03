@@ -27,6 +27,7 @@ jobs:
           pip install tox>=4
           pip install tox-gh>=1.2
           tox -re ${{ matrix.python-version }}
+      - uses: codecov/codecov-action@v4
 
   lint:
       name: Code formatting
@@ -37,13 +38,6 @@ jobs:
         - run: |
             pip install tox>=4
             tox -re format
-
-  coverage:
-    name: Codecov reports
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: codecov/codecov-action@v4
 
   publish:
     needs: test
