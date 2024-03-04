@@ -1,6 +1,7 @@
 import os
 import unittest
 
+from postgrest.exceptions import APIError
 from supabase import SupabaseClient, create_client
 from supabase.client.exceptions import ConfigurationError
 from supabase.lib.client_options import ClientOptions
@@ -13,20 +14,22 @@ def test_create_client():
                 assert create_client(url, key)
             except ConfigurationError:
                 assert True
-
     assert create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
 
 
 class TestSync(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        cls.rows = []
+        cls.table = "countries"
         cls.url = os.getenv("SUPABASE_URL")
         cls.key = os.getenv("SUPABASE_KEY")
-        cls.schema = os.getenv("SUPABASE_TEST_SCHEMA", "unittest")
+        cls.schema = os.getenv("SUPABASE_TEST_SCHEMA", "public")
 
     def setUp(self):
         self.opts = ClientOptions(schema=self.schema)
         self.client = SupabaseClient.create(self.url, self.key, options=self.opts)
+        assert len(self.rows) == 0, "Test table state is not pristine"
 
     def test_create(self):
         for url in ("", None, "valeefgpoqwjgpj", 139, -1, {}, []):
@@ -36,22 +39,28 @@ class TestSync(unittest.TestCase):
 
         self.assertIsNotNone(SupabaseClient.create(self.url, self.key))
 
-    @unittest.skip('TODO: Find the correct usage')
-    def test_from_(self):
-        op = self.client.from_("countries").insert({"name": "Wadiya"}).execute()
+    def test_table(self):
+        op = self.client.table(self.table).insert({"name": "Wadiya"}).execute()
+        self.rows.extend(op.data)
+
         self.assertIsNotNone(op)
+        self.assertGreaterEqual(len(op.data), 1)
 
     def test_rpc(self):
-        pass
+        with self.assertRaises(APIError):
+            self.client.rpc("dead", {"foo": "bar"}).execute()
 
-    def test_get_token_header(self):
-        pass
+        op = self.client.rpc("alive", {}).execute()
+        self.assertTrue(op.data)
 
+    @unittest.skip("TODO")
     def test_listen_to_auth_events(self):
         pass
 
     def tearDown(self) -> None:
-        pass
+        for row in self.rows:
+            self.client.table(self.table).delete().eq("id", row.get('id')).execute()
+        self.rows.clear()
 
 
 class TestAsync(unittest.TestCase):
