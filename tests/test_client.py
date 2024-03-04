@@ -12,10 +12,8 @@ class TestDefaultClient(unittest.TestCase):
         self.client = SupabaseClient(self.url, self.key)
 
     def test_invalid_create_client(self):
-        urls = ("", None, "valeefgpoqwjgpj", 139, -1, {}, [])
-        keys = ("", None, "valeefgpoqwjgpj", 139, -1, {}, [])
-        for url in urls:
-            for key in keys:
+        for url in ("", None, "valeefgpoqwjgpj", 139, -1, {}, []):
+            for key in ("", None, "valeefgpoqwjgpj", 139, -1, {}, []):
                 try:
                     self.assertIsNone(create_client(url, key))
                 except ConfigurationError:
