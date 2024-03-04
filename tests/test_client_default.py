@@ -6,6 +6,8 @@ from supabase import SupabaseClient, create_client
 from supabase.client.exceptions import ConfigurationError
 from supabase.lib.client_options import ClientOptions
 
+from . import ClientTest
+
 
 def test_create_client():
     for url in ("", None, "valeefgpoqwjgpj", 139, -1, {}, []):
@@ -17,15 +19,7 @@ def test_create_client():
     assert create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
 
 
-class TestSync(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.rows = []
-        cls.table = "countries"
-        cls.url = os.getenv("SUPABASE_URL")
-        cls.key = os.getenv("SUPABASE_KEY")
-        cls.schema = os.getenv("SUPABASE_TEST_SCHEMA", "public")
-
+class TestSync(ClientTest):
     def setUp(self):
         self.opts = ClientOptions(schema=self.schema)
         self.client = SupabaseClient.create(self.url, self.key, options=self.opts)
@@ -57,20 +51,12 @@ class TestSync(unittest.TestCase):
     def test_listen_to_auth_events(self):
         pass
 
-    def tearDown(self) -> None:
-        for row in self.rows:
-            self.client.table(self.table).delete().eq("id", row.get('id')).execute()
-        self.rows.clear()
 
-
-class TestAsync(unittest.TestCase):
+class TestAsync(ClientTest):
     def setUp(self) -> None:
         pass
 
     def test_create(self):
-        pass
-
-    def test_get_token_header(self):
         pass
 
     def tearDown(self) -> None:
