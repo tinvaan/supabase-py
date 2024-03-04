@@ -53,11 +53,28 @@ class TestSync(ClientTest):
 
 
 class TestAsync(ClientTest):
-    def setUp(self) -> None:
-        pass
+    def setUp(self):
+        self.opts = ClientOptions(schema=self.schema, is_async=True)
+        self.client = SupabaseClient.create(self.url, self.key, options=self.opts)
 
     def test_create(self):
-        pass
+        for url in ("", None, "valeefgpoqwjgpj", 139, -1, {}, []):
+            for key in ("", None, "valeefgpoqwjgpj", 139, -1, {}, []):
+                with self.assertRaises(ConfigurationError):
+                    SupabaseClient.create(url, key)
 
-    def tearDown(self) -> None:
-        pass
+        self.assertIsNotNone(SupabaseClient.create(self.url, self.key))
+
+    async def test_table(self):
+        op = await self.client.table(self.table).insert({"name": "Wadiya"}).execute()
+        self.rows.extend(op.data)
+
+        self.assertIsNotNone(op)
+        self.assertGreaterEqual(len(op.data), 1)
+
+    async def test_rpc(self):
+        with self.assertRaises(APIError):
+            await self.client.rpc("dead", {"foo": "bar"}).execute()
+
+        op = await self.client.rpc("alive", {}).execute()
+        self.assertTrue(op.data)
