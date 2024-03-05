@@ -61,9 +61,7 @@ class SupabaseClient:
             raise ConfigurationError("Invalid URL")
 
         # Check if the key is a valid JWT
-        if not re.match(
-            r"^[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$", key
-        ):
+        if not re.match(r"^[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$", key):
             raise ConfigurationError("Invalid API key")
 
         self.supabase_url = url
@@ -117,9 +115,7 @@ class SupabaseClient:
         """
         return self.postgrest.from_(table_name)
 
-    def rpc(
-        self, fn: str, params: Dict[Any, Any]
-    ) -> Union[SyncFilterRequestBuilder, AsyncFilterRequestBuilder]:
+    def rpc(self, fn: str, params: Dict[Any, Any]) -> Union[SyncFilterRequestBuilder, AsyncFilterRequestBuilder]:
         """Performs a stored procedure call.
 
         Parameters
@@ -267,9 +263,7 @@ class SupabaseClient:
             access_token = self.supabase_key
         return self._create_auth_header(access_token)
 
-    def _listen_to_auth_events(
-        self, event: AuthChangeEvent, session: Union[Session, None]
-    ):
+    def _listen_to_auth_events(self, event: AuthChangeEvent, session: Union[Session, None]):
         access_token = self.supabase_key
         if event in ["SIGNED_IN", "TOKEN_REFRESHED", "SIGNED_OUT"]:
             # reset postgrest and storage instance on event change
