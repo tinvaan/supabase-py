@@ -31,9 +31,9 @@ class APIClient:
 
         Parameters
         ----------
-        supabase_url: str
+        url: str
             The URL to the Supabase instance that should be connected to.
-        supabase_key: str
+        key: str
             The API key to the Supabase instance that should be connected to.
         **options
             Any extra settings to be optionally specified - also see the
@@ -41,9 +41,9 @@ class APIClient:
         """
 
         if not (url and isinstance(url, str)):
-            raise ConfigurationError("supabase_url is required")
+            raise ConfigurationError("supabase url is required")
         if not (key and isinstance(key, str)):
-            raise ConfigurationError("supabase_key is required")
+            raise ConfigurationError("supabase key is required")
 
         # Check if the url and key are valid
         if not re.match(r"^(https?)://.+", url):
