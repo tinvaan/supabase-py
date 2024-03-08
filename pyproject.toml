@@ -2,7 +2,14 @@
 name = "supabase"
 version = "2.4.0"
 description = "Supabase client for Python."
-authors = ["Joel Lee <joel@joellee.org>", "Leon Fedden <leonfedden@gmail.com>", "Daniel Reinón García <danielreinon@outlook.com>", "Leynier Gutiérrez González <leynier41@gmail.com>", "Anand", "Andrew Smith <a.smith@silentworks.co.uk>"]
+authors = [
+    "Joel Lee <joel@joellee.org>",
+    "Leon Fedden <leonfedden@gmail.com>",
+    "Daniel Reinón García <danielreinon@outlook.com>",
+    "Leynier Gutiérrez González <leynier41@gmail.com>",
+    "Anand",
+    "Andrew Smith <a.smith@silentworks.co.uk>"
+]
 homepage = "https://github.com/supabase-community/supabase-py"
 repository = "https://github.com/supabase-community/supabase-py"
 documentation = "https://github.com/supabase-community/supabase-py"
@@ -14,6 +21,11 @@ classifiers = [
     "Operating System :: OS Independent"
 ]
 
+[tool.poetry.scripts]
+lint = 'poetry_scripts:lint'
+install = 'poetry_scripts:install'
+coverage = 'poetry_scripts:coverage'
+
 [tool.poetry.dependencies]
 python = "^3.8"
 postgrest = ">=0.10.8,<0.17.0"
@@ -23,25 +35,19 @@ httpx = ">=0.24,<0.26"
 storage3 = ">=0.5.3,<0.8.0"
 supafunc = "^0.3.1"
 
-[tool.poetry.dev-dependencies]
-pre-commit = "^3.5.0"
-black = "^24.2"
-pytest = "^8.0.2"
+[tool.poetry.group.dev.dependencies]
+black = "^23.10"
+commitizen = "^3.12.0"
 flake8 = "^5.0.4"
 isort = "^5.10.1"
-pytest-cov = "^4.1.0"
-commitizen = "^3.16.0"
-python-semantic-release = "^9.1.1"
-python-dotenv = "^1.0.1"
-
-[tool.poetry.scripts]
-format = 'poetry_scripts:lint'
-install = 'poetry_scripts:install'
-coverage = 'poetry_scripts:coverage'
-
-[tool.poetry.group.dev.dependencies]
-unasync-cli = "^0.0.9"
+ipdb = "^0.13.13"
 mdformat-gfm = "^0.3.6"
+pre-commit = "^3.5.0"
+pytest = "^8.0.0"
+pytest-cov = "^4.1.0"
+pytest-sugar = "^1.0.0"
+python-dotenv = "^1.0.1"
+python-semantic-release = "^8.3.0"
 
 [tool.semantic_release]
 version_variables = ["supabase/__version__.py:__version__"]
@@ -52,6 +58,9 @@ build_command = "curl -sSL https://install.python-poetry.org | python - --previe
 upload_to_vcs_release = true
 branch = "main"
 changelog_components = "semantic_release.changelog.changelog_headers,semantic_release.changelog.compare_url"
+
+[tool.black]
+line-length = 120
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
