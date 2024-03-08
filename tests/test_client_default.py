@@ -83,12 +83,12 @@ class TestSync(TestClient):
 
 
 class TestAsync(AsyncTestClient):
-    def test_create(self):
+    async def test_create(self):
         for url in ("", None, "valeefgpoqwjgpj", 139, -1, {}, []):
             for key in ("", None, "valeefgpoqwjgpj", 139, -1, {}, []):
                 with self.assertRaises(ConfigurationError):
-                    SupabaseClient.create(url, key, options=self.opts)
-        self.assertIsNotNone(SupabaseClient.create(self.url, self.key, options=self.opts))
+                    await SupabaseClient.create(url, key, options=self.opts)
+        self.assertIsNotNone(await SupabaseClient.create(self.url, self.key, options=self.opts))
 
     async def test_table_delete(self):
         with self.assertRaises(APIError):

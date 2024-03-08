@@ -1,5 +1,7 @@
 import os
+
 from unittest import IsolatedAsyncioTestCase, TestCase
+from gotrue import AsyncMemoryStorage
 
 from supabase import SupabaseClient
 from supabase.lib.client_options import ClientOptions
@@ -35,8 +37,8 @@ class AsyncTestClient(IsolatedAsyncioTestCase):
         cls.countries = set(["Argentina", "Brazil", "Canada", "Dubai"])
 
     async def asyncSetUp(self):
-        self.opts = ClientOptions(schema=self.schema, is_async=True)
-        self.client = SupabaseClient.create(self.url, self.key, options=self.opts)
+        self.opts = ClientOptions(schema=self.schema, is_async=True, storage=AsyncMemoryStorage())
+        self.client = await SupabaseClient.create(self.url, self.key, options=self.opts)
         for country in self.countries:
             await self.client.table(self.table).insert({"name": country}).execute()
 

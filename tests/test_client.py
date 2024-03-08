@@ -9,7 +9,7 @@ class TestDefaultClient(unittest.TestCase):
     def setUp(self) -> None:
         self.url = os.getenv("SUPABASE_URL")
         self.key = os.getenv("SUPABASE_KEY")
-        self.client = SupabaseClient(self.url, self.key)
+        self.client = SupabaseClient.create(self.url, self.key)
 
     def test_invalid_create_client(self):
         for url in ("", None, "valeefgpoqwjgpj", 139, -1, {}, []):
